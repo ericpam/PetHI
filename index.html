@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPD 寵物健保卡編輯器 V1.09</title>
+    <title>EPD 寵物健保卡編輯器 V1.10</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -66,7 +66,7 @@
     </div>
 
     <h3>EPD 寵物健保卡編輯器</h3>
-    <div class="version-tag">Ver 1.09 健保卡專用正式版</div>
+    <div class="version-tag">Ver 1.10 健保卡專用正式版</div>
 
     <div class="workspace-wrapper">
         <div class="canvas-label">
@@ -162,7 +162,6 @@
     <div id="shopeeModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-warning">請確定填入的資料是否正確再送出，送出後將無法修改</div>
-            <!-- 改成「您的帳號:」與對應提示 -->
             <div class="modal-input-label">您的帳號:</div>
             <input type="text" id="shopeeId" class="modal-input" placeholder="請輸入您蝦皮下單的帳號..." oninput="checkModalInput()" style="width:100%; margin-bottom:10px; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing: border-box;">
             
@@ -184,7 +183,6 @@
         const fBgImg = new Image(), bBgImg = new Image();
         let petPhoto = new Image(), originalPhotoFile = null;
 
-        // 標記條碼號碼是否已被使用者手動編輯過
         let isBarcodeManuallyEdited = false;
 
         const config = {
@@ -269,7 +267,6 @@
                 bcInput.value = '/ABCDEFG';
             } else {
                 bcInput.setAttribute('maxlength', '17');
-                // 若切回 CODE128，預設同步前面的晶片號碼（去空白）
                 const rawCid = document.getElementById('cardId').value.replace(/\s+/g, '');
                 bcInput.value = rawCid || '000000000000000';
             }
@@ -287,7 +284,6 @@
             drawAll();
         }
 
-        // 位元組長度限制（中文算 2 byte，英文/數字算 1 byte，限制 8 byte = 4 中文 或 8 英文）
         function enforceLength(el, maxBytes) {
             let str = el.value; let len = 0; let newStr = '';
             for (let i = 0; i < str.length; i++) {
@@ -306,14 +302,12 @@
             drawAll();
         }
 
-        // 晶片號碼輸入（連動背面條碼號碼）
         function handleCardIdInput(el) {
             let clean = el.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             if (clean.length > 15) clean = clean.substring(0, 15);
             let matches = clean.match(/.{1,4}/g);
             el.value = matches ? matches.join(' ') : clean;
 
-            // 若目前為 CODE128 且使用者未手動編輯背面條碼，則自動同步連動
             const bcType = document.getElementById('barcodeType').value;
             if (bcType === 'CODE128' && !isBarcodeManuallyEdited) {
                 const bcInput = document.getElementById('barcodeNum');
@@ -518,7 +512,8 @@
             drawFront(1.5, cloudCtx, isBg); const fBlobCloud = await changeDpiBlob(await new Promise(r => cloudCanvas.toBlob(r, 'image/jpeg', 1.0)), 254);
             drawBack(1.5, cloudCtx); const bBlobCloud = await changeDpiBlob(await new Promise(r => cloudCanvas.toBlob(r, 'image/jpeg', 1.0)), 254);
             
-            const txt = `【寵物健保卡】\r\n● 健保卡正面\r\n姓名: ${petN}\r\n電話: ${document.getElementById('phoneNum').value}\r\n出生日期: 民國 ${birthStr}\r\n晶片號碼: ${document.getElementById('cardId').value}\r\n\r\n● 健保卡背面\r\n條碼碼文: ${finalBarcode}\r\n條碼類型: ${document.getElementById('barcodeType').value}`;
+            // 修正輸出文字檔內容：出生日期拿掉民國、背面順序與抬頭規範
+            const txt = `【寵物健保卡】\r\n● 健保卡正面\r\n姓名: ${petN}\r\n電話: ${document.getElementById('phoneNum').value}\r\n出生日期: ${birthStr}\r\n晶片號碼: ${document.getElementById('cardId').value}\r\n\r\n● 健保卡背面\r\n條碼類型: ${document.getElementById('barcodeType').value}\r\n條碼號碼: ${finalBarcode}`;
 
             const nowD = new Date();
             const ymd = `${nowD.getFullYear()}${(nowD.getMonth() + 1).toString().padStart(2, '0')}${nowD.getDate().toString().padStart(2, '0')}`;
